@@ -25,27 +25,41 @@ def load_data(knn=False, nnSize=0):
     return pos_edge, neg_edge, adjs
 
 
+def load_cmf_data():
+    print("loading sl data...")
+    adjs = []
+    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_coexpr_for_train')))
+    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_me_for_train')))
+    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_pathway_for_train')))
+    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_proteincomplex_for_train')))
+    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_ppi_for_train')))
+    pos_edge = np.load('../cmfdata/pos_edge_binary.npy').astype(np.int32)
+    neg_edge = np.load('../cmfdata/neg_edge_binary.npy').astype(np.int32)
+    return pos_edge, neg_edge, adjs
+
+
 def load_SL_matrix():
     print("Loading SL matrix...")
 
-    sl_mapping, num_nodes = dict(), 0
+    slMapping, NumNodes = dict(), 0
     with open('../data/List_Proteins_in_SL.txt', 'r') as inf:
         id = 0
         for line in inf:
-            sl_mapping[line.replace('\n', '')] = id
+            slMapping[line.replace('\n', '')] = id
             id += 1
-        num_nodes = id
+        NumNodes = id
 
     row, col = [], []
     with open("../data/SL_Human_Approved.txt", "r") as inf:
         for line in inf:
             id = line.rstrip().split()
-            row.append(sl_mapping[id[0]])
-            col.append(sl_mapping[id[1]])
+            row.append(slMapping[id[0]])
+            col.append(slMapping[id[1]])
 
-    adj = sp.coo_matrix((np.ones(len(row)), (row, col)), shape=(num_nodes, num_nodes))
+    adj = sp.coo_matrix((np.ones(len(row)), (row, col)), shape=(NumNodes, NumNodes))
+    adj = adj + adj.T
     adj = adj.toarray()
-    x, y = np.triu_indices(num_nodes, k=1)
+    x, y = np.triu_indices(NumNodes, k=1)
     pos_edge, neg_edge = [], []
 
     for e in zip(x, y):
@@ -62,13 +76,13 @@ def load_SL_matrix():
 def load_nonPred_SL_matrix():
     print("Loading SL matrix...")
 
-    sl_mapping, num_nodes = dict(), 0
+    slMapping, NumNodes = dict(), 0
     with open('../data/List_Proteins_in_SL.txt', 'r') as inf:
         id = 0
         for line in inf:
-            sl_mapping[line.replace('\n', '')] = id
+            slMapping[line.replace('\n', '')] = id
             id += 1
-        num_nodes = id
+        NumNodes = id
 
     computational_pairs = []
     with open("../data/computational_pairs.txt", "r") as inf:
@@ -81,12 +95,12 @@ def load_nonPred_SL_matrix():
         for line in inf:
             name1, name2, _ = line.rstrip().split()
             if {name1, name2} not in computational_pairs:
-                row.append(sl_mapping[name1])
-                col.append(sl_mapping[name2])
+                row.append(slMapping[name1])
+                col.append(slMapping[name2])
 
-    adj = sp.coo_matrix((np.ones(len(row)), (row, col)), shape=(num_nodes, num_nodes))
+    adj = sp.coo_matrix((np.ones(len(row)), (row, col)), shape=(NumNodes, NumNodes))
     adj = adj.toarray()
-    x, y = np.triu_indices(num_nodes, k=1)
+    x, y = np.triu_indices(NumNodes, k=1)
     pos_edge, neg_edge = [], []
 
     for e in zip(x, y):
@@ -128,20 +142,20 @@ def load_dense_feature(fileName, knn=False, nnSize=0):
     print('Loading ' + fileName)
     featureFile = open(fileName, 'r')
     line = featureFile.readlines()
-    feature_matrix = np.zeros((6375, 6375))
+    featureMatrix = np.zeros((6375, 6375))
 
     for i in range(len(line)):
         s = line[i].replace('\n', '').split('\t')
         for j in range(i, len(s)):
             if s[j] == '': break
-            feature_matrix[i][j + 1] = float(s[j])
+            featureMatrix[i][j + 1] = float(s[j])
 
-    feature_matrix = feature_matrix + feature_matrix.T
-    if knn is True:
-        feature_matrix = build_KNN_mateix(feature_matrix, nn_size=nnSize)
+    featureMatrix = featureMatrix + featureMatrix.T
+    if knn == True:
+        featureMatrix = build_KNN_mateix(featureMatrix, nn_size=nnSize)
 
-    feature_matrix = feature_matrix + feature_matrix.T
-    features = array2coo(feature_matrix)
+    featureMatrix = featureMatrix + featureMatrix.T
+    features = array2coo(featureMatrix)
 
     return features
 
@@ -201,5 +215,9 @@ def construct_feed_dict(support, features, adj_orig, placeholders):
 
 
 if __name__ == '__main__':
-    a = load_dense_feature('../data/Human_GOsim.txt', knn=True, nnSize=45)
-    print(a)
+    # a = load_dense_feature('../data/Human_GOsim.txt', knn=True, nnSize=45)
+    # logits = np.array([10989.211, 10995.484, 10979.361, 10991.63, 10990.312])
+    logits = np.array([2441.0, 2382.5, 2296.5])
+    logits /= 1000
+    softmax = np.exp(logits) / np.sum(np.exp(logits))
+    print(softmax)
