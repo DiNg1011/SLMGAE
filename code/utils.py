@@ -25,16 +25,16 @@ def load_data(knn=False, nnSize=0):
     return pos_edge, neg_edge, adjs
 
 
-def load_cmf_data():
+def load_BC_data():
     print("loading sl data...")
     adjs = []
-    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_coexpr_for_train')))
-    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_me_for_train')))
-    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_pathway_for_train')))
-    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_proteincomplex_for_train')))
-    adjs.append(sp.coo_matrix(np.loadtxt('../cmfdata/F1_F2_ppi_for_train')))
-    pos_edge = np.load('../cmfdata/pos_edge_binary.npy').astype(np.int32)
-    neg_edge = np.load('../cmfdata/neg_edge_binary.npy').astype(np.int32)
+    adjs.append(sp.coo_matrix(np.loadtxt('../BC_data/F1_F2_coexpr_for_train')))
+    adjs.append(sp.coo_matrix(np.loadtxt('../BC_data/F1_F2_me_for_train')))
+    adjs.append(sp.coo_matrix(np.loadtxt('../BC_data/F1_F2_pathway_for_train')))
+    adjs.append(sp.coo_matrix(np.loadtxt('../BC_data/F1_F2_proteincomplex_for_train')))
+    adjs.append(sp.coo_matrix(np.loadtxt('../BC_data/F1_F2_ppi_for_train')))
+    pos_edge = np.load('../BC_data/pos_edge_binary.npy').astype(np.int32)
+    neg_edge = np.load('../BC_data/neg_edge_binary.npy').astype(np.int32)
     return pos_edge, neg_edge, adjs
 
 
@@ -215,9 +215,5 @@ def construct_feed_dict(support, features, adj_orig, placeholders):
 
 
 if __name__ == '__main__':
-    # a = load_dense_feature('../data/Human_GOsim.txt', knn=True, nnSize=45)
-    # logits = np.array([10989.211, 10995.484, 10979.361, 10991.63, 10990.312])
-    logits = np.array([2441.0, 2382.5, 2296.5])
-    logits /= 1000
-    softmax = np.exp(logits) / np.sum(np.exp(logits))
-    print(softmax)
+    a = load_dense_feature('../data/Human_GOsim.txt', knn=True, nnSize=45)
+
